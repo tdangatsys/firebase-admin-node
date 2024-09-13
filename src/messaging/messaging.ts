@@ -333,10 +333,20 @@ export class Messaging {
       .then((results) => {
         const responses: SendResponse[] = [];
         results.forEach(result => {
-          if (result.status === 'fulfilled') {
-            responses.push(result.value);
-          } else { // rejected
-            responses.push({ success: false, error: result.reason })
+          // detect is bluebrid Promise
+          if ((<any>Promise).version) {
+            if ((<any>result).isFulfilled()) {
+              responses.push((<any>result).value()); 
+            }
+            else { // rejected
+              responses.push({ success: false, error: (<any>result).reason() })
+            }
+          } else {
+            if (result.status === 'fulfilled') {
+              responses.push(result.value);
+            } else { // rejected
+              responses.push({ success: false, error: result.reason })
+            }
           }
         })
         const successCount: number = responses.filter((resp) => resp.success).length;
